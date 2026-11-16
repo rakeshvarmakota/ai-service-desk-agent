@@ -1,5 +1,6 @@
 """A tiny ticket database (SQLite) for the service desk assistant."""
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 DB_PATH = Path(__file__).parent / "tickets.db"
@@ -28,7 +29,7 @@ def create_ticket(employee, category, summary):
     """Save a new ticket and return it."""
     if category not in CATEGORIES:
         return {"error": f"Category must be one of: {', '.join(CATEGORIES)}"}
-    with connect() as connection:
+    with closing(connect()) as connection, connection:
         cursor = connection.execute(
             "INSERT INTO tickets (employee, category, summary) VALUES (?, ?, ?)",
             (employee, category, summary),
@@ -39,7 +40,7 @@ def create_ticket(employee, category, summary):
 
 def get_ticket(ticket_id):
     """Look up one ticket by its number."""
-    with connect() as connection:
+    with closing(connect()) as connection:
         row = connection.execute("SELECT * FROM tickets WHERE id = ?", (ticket_id,)).fetchone()
     if row is None:
         return {"error": f"No ticket found with number {ticket_id}"}
